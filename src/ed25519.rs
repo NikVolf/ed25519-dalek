@@ -96,7 +96,7 @@ pub fn verify_batch(
     assert!(signatures.len()  == messages.len(),    ASSERT_MESSAGE);
     assert!(signatures.len()  == public_keys.len(), ASSERT_MESSAGE);
     assert!(public_keys.len() == messages.len(),    ASSERT_MESSAGE);
- 
+
     #[cfg(feature = "alloc")]
     use alloc::vec::Vec;
     #[cfg(feature = "std")]
@@ -492,6 +492,7 @@ impl<'d> Deserialize<'d> for Keypair {
     }
 }
 
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -512,5 +513,20 @@ mod test {
         }
 
         assert!(!as_bytes(&keypair).contains(&0x15));
+    }
+}
+
+#[test]
+fn verify_batch_not_flaky_on_empty_input() {
+    for _ in 0..100 {
+        match
+            verify_batch(
+                &[&[]],
+                &[Signature::from_bytes(&[0u8; 64]).unwrap()],
+                &[PublicKey::from_bytes(&[0u8; 32]).unwrap()],
+            ) {
+            Ok(_) => panic!("Successfully verified empty message with empty signature and empty public"),
+            Err(_) => continue,
+        }
     }
 }
